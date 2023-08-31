@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -exufo pipefail
+
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+	binutils \
+	ca-certificates \
+	curl \
+	gcc \
+	libc6-dev \
+	make \
+	xz-utils \
+	;
+
+curl https://ftp.gnu.org/gnu/coreutils/coreutils-9.4.tar.xz | xz -d | tar -x
+cd coreutils-9.4
+FORCE_UNSAFE_CONFIGURE=1 ./configure
+make -j "$(nproc)"

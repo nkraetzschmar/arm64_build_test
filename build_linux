@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -exufo pipefail
+
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+	bc \
+	binutils \
+	bison \
+	ca-certificates \
+	curl \
+	flex \
+	gcc \
+	libc6-dev \
+	libssl-dev \
+	make \
+	xz-utils \
+	;
+
+curl https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.5.tar.xz | xz -d | tar -x
+cd linux-6.5
+make allnoconfig
+make -j "$(nproc)"

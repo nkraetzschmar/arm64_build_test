@@ -1,0 +1,13 @@
+binutils binutils-aarch64-linux-gnu
+bzip2
+cpio
+cpp-12 cpp-12-aarch64-linux-gnu
+g++-12 g++-12-aarch64-linux-gnu
+gcc-12 gcc-12-aarch64-linux-gnu
+gzip
+lz4
+lzip
+lzop
+tar
+xz-utils
+zstd

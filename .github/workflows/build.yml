@@ -1,0 +1,63 @@
+on:
+  push:
+    branch: main
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    needs: build_binfmt_container
+    services:
+      binfmt_misc:
+        image: ghcr.io/${{ github.repository }}/qemu-user-static
+        options: >-
+          --privileged
+          --health-cmd "sleep 60"
+          --health-timeout 120s
+    steps:
+      - run: true
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: setup
+        run: |
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-user-static
+      - name: build
+        run: |
+          podman login -u token -p ${{ github.token }} ghcr.io
+          podman build --squash-all --tag ghcr.io/${{ github.repository }} .
+          podman push ghcr.io/${{ github.repository }}
+  build_binfmt_container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: |
+          podman login -u token -p ${{ github.token }} ghcr.io
+          podman build --squash-all --tag ghcr.io/${{ github.repository }}/qemu-user-static qemu-user-static
+          podman push ghcr.io/${{ github.repository }}/qemu-user-static
+  test:
+    runs-on: ubuntu-latest
+    needs: [ build, build_binfmt_container ]
+    strategy:
+      fail-fast: false
+      matrix:
+        container: [ "arm64v8/debian", "ghcr.io/${{ github.repository }}" ]
+    container:
+      image: "${{ matrix.container }}"
+    services:
+      binfmt_misc:
+        image: ghcr.io/${{ github.repository }}/qemu-user-static
+        options: "--privileged"
+    steps:
+      - uses: nkraetzschmar/workflow-telemetry-action@v1
+        with:
+          metric_frequency: 1
+          comment_on_pr: false
+      - uses: actions/checkout@v3
+      - name: get uname
+        run: uname -a
+      - name: build coreutils
+        run: ./build_coreutils
+      - name: build linux
+        run: ./build_linux
